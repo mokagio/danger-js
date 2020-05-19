@@ -1,7 +1,7 @@
 import { Env, CISource } from "../ci_source"
 import { ensureEnvKeysExist } from "../ci_source_helpers"
 import { readFileSync, existsSync } from "fs"
-import { debug } from "../../debug.ts"
+import { debug } from "../../debug"
 
 // https://developer.github.com/actions/
 
