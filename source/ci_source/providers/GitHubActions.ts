@@ -1,6 +1,7 @@
 import { Env, CISource } from "../ci_source"
 import { ensureEnvKeysExist } from "../ci_source_helpers"
 import { readFileSync, existsSync } from "fs"
+import { debug } from "../../debug.ts"
 
 // https://developer.github.com/actions/
 
@@ -153,9 +154,11 @@ import { readFileSync, existsSync } from "fs"
 
 export class GitHubActions implements CISource {
   private event: any
+  private readonly d = debug("GitHubActions")
 
   constructor(private readonly env: Env, event: any = undefined) {
     const { GITHUB_EVENT_PATH } = env
+    this.d(`Constructor: GITHUB_EVENT_PATH = ${GITHUB_EVENT_PATH}`)
     const eventFilePath = GITHUB_EVENT_PATH || "/github/workflow/event.json"
 
     if (event !== undefined) {
@@ -171,6 +174,7 @@ export class GitHubActions implements CISource {
   }
 
   get isCI(): boolean {
+    this.d(`isCI = ${ensureEnvKeysExist(this.env, ["GITHUB_WORKFLOW"])}`)
     return ensureEnvKeysExist(this.env, ["GITHUB_WORKFLOW"])
   }
 
@@ -180,10 +184,15 @@ export class GitHubActions implements CISource {
   }
 
   get useEventDSL() {
+    this.d(`useEventDSL = ${this.event.pull_request === undefined && this.event.issue === undefined}`)
     return this.event.pull_request === undefined && this.event.issue === undefined
   }
 
   get pullRequestID(): string {
+    this.d(`pullRequestID`)
+    this.d(` this.event.pull_request ${this.event.pull_request}`)
+    this.d(` this.event.issue ${this.event.issue}`)
+
     if (this.event.pull_request !== undefined) {
       return this.event.pull_request.number
     } else if (this.event.issue !== undefined) {
