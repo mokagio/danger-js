@@ -416,9 +416,16 @@ export class GitHubAPI {
       headers["Authorization"] = `token ${this.token}`
     }
 
+    this.d(`api called with path ${path}`)
+    this.d(`api`)
+    this.d(`  process.env["DANGER_GITHUB_API_BASE_URL"] = ${process.env["DANGER_GITHUB_API_BASE_URL"}`)
+    this.d(`  process.env["GITHUB_URL"] = ${process.env["GITHUB_URL"}`)
+
     const containsBase = path.startsWith("http")
     const baseUrl = process.env["DANGER_GITHUB_API_BASE_URL"] || process.env["GITHUB_URL"] || "https://api.github.com"
     const url = containsBase ? path : `${baseUrl}/${path}`
+
+    this.d(`  computed URL = ${url}`)
 
     let customAccept = {}
     if (headers.Accept && this.additionalHeaders.Accept) {
