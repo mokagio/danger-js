@@ -43,6 +43,22 @@ export function pullRequestParser(address: string): PullRequestParts | null {
       }
     }
 
+    // Adding support for extracting the resource number from a GitHub issue
+    // URL means that when using the "pr" command, it can parse an issue, too.
+    //
+    // Now, I understand it might be confusing or inappropriate to feed an
+    // issue to the "pr" command, but it's handy while I'm poking around the
+    // system. This code doesn't have to make it into production anyways.
+    //
+    // shape: http://github.com/proj/repo/issue/1
+    if (includes(components.path, "issue")) {
+      return {
+        platform: GitHub.name,
+        repo: components.path.split("/issue")[0].slice(1),
+        pullRequestNumber: components.path.split("/issue/")[1],
+      }
+    }
+
     // shape: https://gitlab.com/GROUP[/SUBGROUP]/PROJ/merge_requests/123
     if (includes(components.path, "merge_requests")) {
       const regex = /\/(.+)\/merge_requests\/(\d+)/
