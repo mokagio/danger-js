@@ -200,11 +200,35 @@ export class GitHubAPI {
     }
     const repo = this.repoMetadata.repoSlug
     const prID = this.repoMetadata.pullRequestID
-    const res = await this.get(`repos/${repo}/pulls/${prID}`)
-    const prDSL = (await res.json()) as GitHubPRDSL
+    // I don't think it's appropriate to have the following code here, but it's
+    // the first place I could find to plug into while exploring the issue of
+    // Danger not running with issues (pun intended).
+    //
+    // Being able to run with issues would be useful to bring Danger closer to
+    // Peril. Danger via GitHub Actions sounds like a promising and easier to
+    // setup alternative to Peril, but right now it's only as useful when
+    // running on PRs.
+    //
+    // How could we add support for issues, too? Here's an idea.
+    //
+    // Since PRs are special kind of issues, we can retrieve their info via
+    // the issues endpoint. Depending on the response, we can then fetch the
+    // full information using the PR endpoint, or only use a simplified DSL
+    // if the resource we got back is a pure issue.
+    const res = await this.get(`repos/${repo}/issues/${prID}`)
+    const json = await res.json()
+    this.d(`👋 The resource with id ${prID} is ${JSON.stringify(json, null, 2)}`)
+
+    if (json["pull_request"] === undefined) {
+      throw `Danger is running on an issue, but only knows how to work with PRs.`
+    }
+
+    // TODO: might want to use the URL in the pull_request object
+    const prRes = await this.get(`repos/${repo}/pulls/${prID}`)
+    const prDSL = (await prRes.json()) as GitHubPRDSL
     this.pr = prDSL
 
-    if (res.ok) {
+    if (prRes.ok) {
       return prDSL
     } else {
       throw `Could not get PR Metadata for repos/${repo}/pulls/${prID}`
