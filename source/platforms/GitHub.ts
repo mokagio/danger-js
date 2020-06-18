@@ -1,4 +1,5 @@
 import { GitHubPRDSL, GitHubDSL, GitHubAPIPR, GitHubJSONDSL } from "../dsl/GitHubDSL"
+import { debug } from "../debug"
 import { GitHubAPI } from "./github/GitHubAPI"
 import GitHubUtils from "./github/GitHubUtils"
 import gitDSLForGitHub from "./github/GitHubGit"
@@ -12,6 +13,8 @@ import { GitHubChecksCommenter } from "./github/comms/checksCommenter"
 /** Handles conforming to the Platform Interface for GitHub, API work is handle by GitHubAPI */
 
 export type GitHubType = Platform & { api: GitHubAPI }
+
+const d = debug("GitHub.ts")
 
 export function GitHub(api: GitHubAPI) {
   /**
@@ -39,6 +42,10 @@ export function GitHub(api: GitHubAPI) {
     getPlatformGitRepresentation: () => gitDSLForGitHub(api),
 
     getPlatformReviewDSLRepresentation: async () => {
+      // We should always be able to get the issue, regardless of whether we're dealing with a PR or just an issue
+      const issue = await getIssue()
+      d(`👋 issue = ${JSON.stringify(issue, null, 2)}`)
+
       let pr: GitHubPRDSL
       try {
         pr = await api.getPullRequestInfo()
@@ -51,7 +58,6 @@ export function GitHub(api: GitHubAPI) {
         `
       }
 
-      const issue = await getIssue()
       const commits = await api.getPullRequestCommits()
       const reviews = await api.getReviews()
       const requested_reviewers = await api.getReviewerRequests()
